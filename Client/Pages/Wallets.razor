@@ -1,0 +1,89 @@
+﻿@page "/wallets"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Endava_Project.Shared
+@attribute [Authorize]
+@inject HttpClient HttpClient
+
+<h3>Wallets List :</h3>
+@if (wallets.Count > 0)
+{
+    foreach (var x in wallets)
+    {
+        <div class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Currency : @x.Currency</h5>
+                <h6 class="card-subtitle mb-2 text-muted">Amount : @x.Amount</h6>
+                <h6 class="card-subtitle mb-2 text-muted">Id : @x.Id</h6>
+                <button class="btn btn-light">...</button>
+                <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
+            </div>
+        </div>
+    }
+}
+
+<div>
+    <br />
+    <h2>Create new wallet</h2>
+    
+    <select @bind="currency">
+        <option value=" " selected>Choose a currency :</option>
+        @foreach (var type in Enum.GetValues(typeof(Currency_type)))
+        {
+            <option value=@type>@type.ToString()</option>
+        }
+    </select>
+    <button class="btn btn-info" @onclick="()=> CreateWallet()">Add</button>
+
+</div>
+
+@code {
+    private enum Currency_type { USD, EU, MD, UK};
+    private List<Wallet> wallets = new List<Wallet>();
+    private string currency;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    protected async Task LoadData()
+    {
+        wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+    }
+
+    private async Task CreateWallet()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(currency))
+                return;
+
+            var response = await HttpClient.PostAsync("api/wallet?currency=" + currency, null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async Task DeleteWallet(Guid data)
+    {
+        var info = data.ToString();
+        await HttpClient.DeleteAsync("api/wallet?data="+info);
+        await LoadData();
+    }
+}

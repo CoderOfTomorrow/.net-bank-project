@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using System.Linq;
 using Endava_Project.Server.Data;
 using Endava_Project.Server.Models;
+using System.Security.Claims;
 
 namespace Endava_Project.Server
 {
@@ -41,6 +42,9 @@ namespace Endava_Project.Server
 
             services.AddAuthentication()
                 .AddIdentityServerJwt();
+
+            services.Configure<IdentityOptions>(options =>
+                options.ClaimsIdentity.UserIdClaimType = ClaimTypes.NameIdentifier);
 
             services.AddControllersWithViews();
             services.AddRazorPages();
