@@ -8,24 +8,30 @@
 <h3>Wallets List :</h3>
 @if (wallets.Count > 0)
 {
-    foreach (var x in wallets)
+    <div class="row">
+    @foreach (var x in wallets)
     {
-        <div class="card" style="width: 18rem;">
-            <div class="card-body">
-                <h5 class="card-title">Currency : @x.Currency</h5>
-                <h6 class="card-subtitle mb-2 text-muted">Amount : @x.Amount</h6>
-                <h6 class="card-subtitle mb-2 text-muted">Id : @x.Id</h6>
-                <button class="btn btn-light">...</button>
-                <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
+        <div class="col-4">
+
+            <div class="card" style="width: 18rem;">
+                <div class="card-body">
+                    <h5 class="card-title">Currency : @x.Currency</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Amount : @x.Amount</h6>
+                    <h6 class="card-subtitle mb-2 text-muted">Id : @x.Id</h6>
+                    <button class="btn btn-light">Make a transfer</button>
+                    <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
+                </div>
             </div>
         </div>
     }
+    </div>
+
 }
 
 <div>
     <br />
     <h2>Create new wallet</h2>
-    
+
     <select @bind="currency">
         <option value=" " selected>Choose a currency :</option>
         @foreach (var type in Enum.GetValues(typeof(Currency_type)))
@@ -38,7 +44,7 @@
 </div>
 
 @code {
-    private enum Currency_type { USD, EU, MD, UK};
+    private enum Currency_type { USD, EU, MD, UK };
     private List<Wallet> wallets = new List<Wallet>();
     private string currency;
 
@@ -83,7 +89,7 @@
     private async Task DeleteWallet(Guid data)
     {
         var info = data.ToString();
-        await HttpClient.DeleteAsync("api/wallet?data="+info);
+        await HttpClient.DeleteAsync("api/wallet?data=" + info);
         await LoadData();
     }
 }
