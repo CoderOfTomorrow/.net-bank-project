@@ -112,7 +112,8 @@ else
 
     private async Task CheckUsername()
     {
-        usernameStatus = await HttpClient.GetFromJsonAsync<bool>($"api/helper/{data.Username}");
+        if(data.Username != null)
+            usernameStatus = await HttpClient.GetFromJsonAsync<bool>($"api/helper/{data.Username}");
     }
 
     private bool CheckWalletId(string info)

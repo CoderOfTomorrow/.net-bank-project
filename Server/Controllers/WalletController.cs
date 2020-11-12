@@ -49,18 +49,11 @@ namespace Endava_Project.Server.Controllers
         {
             var transactions_list = new List<Transaction>();
             var userId = userManager.GetUserId(User);
-            var id_list = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.ToList();
-            var transactions = context.Transactions.ToList();
-            foreach(var id in id_list)
-            {
-                foreach(var t in transactions)
-                {
-                    if (id.Id == t.SourceWalletId || id.Id == t.DestinationWalletId)
-                        transactions_list.Add(t);
-                }
-            }
-            var all_transactions = transactions_list.Distinct().ToList();
-            return all_transactions;
+            var id_list = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.Select(e => e.Id).ToList();
+            transactions_list = context.Transactions.Where(t => id_list.Contains(t.SourceWalletId) || id_list.Contains(t.DestinationWalletId)).ToList();
+            transactions_list = transactions_list.Distinct().ToList();
+
+            return transactions_list;
         }
 
         [HttpPost]

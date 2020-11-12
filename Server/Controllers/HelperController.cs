@@ -25,12 +25,8 @@ namespace Endava_Project.Server.Controllers
         [Route("{username}")]
         public bool CheckUser(string username)
         {
-            foreach(var user in context.Users)
-            {
-                if (user.UserName == username)
-                    return true;
-            }
-            return false;
+            var user = context.Users.FirstOrDefault(u => u.UserName == username);
+            return user != null;
         }
     }
 }
