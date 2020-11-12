@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Endava_Project.Shared;
 using Wallet = Endava_Project.Server.Models.Wallet;
+using Transaction = Endava_Project.Server.Models.Transaction;
 
 namespace Endava_Project.Server.Controllers
 {
@@ -40,6 +41,26 @@ namespace Endava_Project.Server.Controllers
             var userId = userManager.GetUserId(User);
             var wallet = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.FirstOrDefault(x => x.Id == id);
             return wallet;
+        }
+
+        [HttpGet]
+        [Route("transactions")]
+        public List<Transaction> GetTransactions()
+        {
+            var transactions_list = new List<Transaction>();
+            var userId = userManager.GetUserId(User);
+            var id_list = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.ToList();
+            var transactions = context.Transactions.ToList();
+            foreach(var id in id_list)
+            {
+                foreach(var t in transactions)
+                {
+                    if (id.Id == t.SourceWalletId || id.Id == t.DestinationWalletId)
+                        transactions_list.Add(t);
+                }
+            }
+            var all_transactions = transactions_list.Distinct().ToList();
+            return all_transactions;
         }
 
         [HttpPost]
