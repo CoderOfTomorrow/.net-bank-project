@@ -1,0 +1,160 @@
+﻿@page "/transfer/{sourceWalletId}"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Endava_Project.Shared
+@attribute [Authorize]
+@inject HttpClient HttpClient
+@inject NavigationManager navManager
+
+
+@if (wallet == null)
+{
+    <h2>Loading...</h2>
+}
+else
+{
+    
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Wallet Informations :</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Amount : @wallet.Amount</h6>
+            <h6 class="card-subtitle mb-2 text-muted">Currency : @wallet.Currency</h6>
+            <br />
+            <h5 class="card-title">Make a transfer to :</h5>
+            <div class="row">
+                <div class="col-6">
+                    <label>Recipient's name :</label>
+                    <input type="email" class="form-control" placeholder="Recipient's name..." @bind="data.Username" @onfocusout=CheckUsername>
+                    @if (usernameStatus)
+                    {
+                        <small class="form-text text-success">Recipient's name is valid.</small>
+                    }
+                    else
+                    {
+                        <small class="form-text text-danger">Recipient's name is invalid.</small>
+                    }
+                </div>
+                <div class="col-6">
+                    <label>Recipient's Wallet Id :</label>
+                    <input class="form-control" placeholder="Recipient's Wallet Id..." @bind="targetId">
+                    @if (CheckWalletId(targetId))
+                    {
+                        <small class="form-text text-success">The Wallet Id format is valid.</small>
+                    }
+                    else
+                    {
+                        <small class="form-text text-danger">The Wallet Id format is invalid.</small>
+                    }
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6 p-2">
+                    <label>Amount :</label>
+                    <input type="text" class="form-control" placeholder="The Amount..." @bind="Amount">
+                    @if (CheckAmount(Amount))
+                    {
+                        <small class="form-text text-success">The amount entered is valid.</small>
+                    }
+                    else
+                    {
+                        <small class="form-text text-danger">The amount entered is invalid.</small>
+                    }
+                </div>
+                <div class="col-6 p-3">
+                    <br />
+                    @if (usernameStatus && CheckWalletId(targetId) && CheckAmount(Amount))
+                    {
+                        <button class="btn btn-danger" @onclick=MakeTransfer>Finish the transfer</button>
+                        <small class="form-text text-success">The transfer can be done now.</small>
+                    }
+                    else
+                    {
+                        <button class="btn btn-danger">Finish the transfer</button>
+                        <small class="form-text text-danger">The transfer can't be done now.</small>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <br />
+    @if (!Status)
+    {
+        <div class="alert alert-danger" role="alert">
+            Atentie ! Datele introduse nu corespund aceluiasi utilizator !
+        </div>
+    }
+}
+@code {
+    [Parameter]
+    public string sourceWalletId { get; set; }
+    public Wallet wallet { get; set; }
+
+    public bool usernameStatus = false;
+    public bool Status = true;
+    public string Amount, targetId;
+    public TransferDto data = new TransferDto {
+        Username = null
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallet = await HttpClient.GetFromJsonAsync<Wallet>($"api/wallet/{sourceWalletId}");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+
+    private async Task CheckUsername()
+    {
+        if(data.Username != null)
+            usernameStatus = await HttpClient.GetFromJsonAsync<bool>($"api/helper/{data.Username}");
+    }
+
+    private bool CheckWalletId(string info)
+    {
+        Guid id;
+        if (Guid.TryParse(info, out id) && id.ToString() != sourceWalletId)
+            return true;
+        return false;
+    }
+
+    private bool CheckAmount(string info)
+    {
+        decimal number;
+        if (Decimal.TryParse(info, out number))
+            if (number <= wallet.Amount && number >= 1)
+                return true;
+        return false;
+    }
+
+    private async Task MakeTransfer()
+    {
+        try
+        {
+            data.SourceId = wallet.Id;
+            data.TargetId = Guid.Parse(targetId);
+            data.Amount = Decimal.Parse(Amount);
+            data.Currency = wallet.Currency;
+
+            var response = await HttpClient.PostAsJsonAsync($"api/wallet/transfer", data);
+            if (response.IsSuccessStatusCode)
+            {
+                navManager.NavigateTo("wallets");
+            }
+            else
+                Status = false;
+
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+}

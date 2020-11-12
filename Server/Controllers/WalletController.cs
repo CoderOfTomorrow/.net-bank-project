@@ -6,6 +6,9 @@ using Endava_Project.Server.Data;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Endava_Project.Shared;
+using Wallet = Endava_Project.Server.Models.Wallet;
+using Transaction = Endava_Project.Server.Models.Transaction;
 
 namespace Endava_Project.Server.Controllers
 {
@@ -16,7 +19,7 @@ namespace Endava_Project.Server.Controllers
         private readonly ApplicationDbContext context;
         private readonly UserManager<ApplicationUser> userManager;
 
-        public WalletController(ApplicationDbContext context,UserManager<ApplicationUser> userManager)
+        public WalletController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             this.context = context;
             this.userManager = userManager;
@@ -26,15 +29,37 @@ namespace Endava_Project.Server.Controllers
         public List<Wallet> GetWallets()
         {
             var userId = userManager.GetUserId(User);
-            var wallets = context.Users.Include(e=>e.Wallets).FirstOrDefault(e => e.Id == userId).Wallets;
+            var wallets = context.Users.Include(e => e.Wallets).FirstOrDefault(e => e.Id == userId).Wallets;
             return wallets;
 
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public Wallet GetWallet(Guid id)
+        {
+            var userId = userManager.GetUserId(User);
+            var wallet = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.FirstOrDefault(x => x.Id == id);
+            return wallet;
+        }
+
+        [HttpGet]
+        [Route("transactions")]
+        public List<Transaction> GetTransactions()
+        {
+            var transactions_list = new List<Transaction>();
+            var userId = userManager.GetUserId(User);
+            var id_list = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.Select(e => e.Id).ToList();
+            transactions_list = context.Transactions.Where(t => id_list.Contains(t.SourceWalletId) || id_list.Contains(t.DestinationWalletId)).ToList();
+            transactions_list = transactions_list.Distinct().ToList();
+
+            return transactions_list;
         }
 
         [HttpPost]
         public IActionResult CreateWallet([FromQuery] string currency)
         {
-     
+
             var new_data = new Wallet
             {
                 Amount = 0,
@@ -49,7 +74,48 @@ namespace Endava_Project.Server.Controllers
             context.SaveChanges();
             return Ok();
         }
-    
+
+        [HttpPost]
+        [Route("transfer")]
+        public IActionResult MakeTransfer([FromBody] TransferDto data)
+        {
+            var userId = userManager.GetUserId(User);
+            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
+            if (!user.Wallets.Any(x => x.Id == data.SourceId))
+            {
+                return BadRequest();
+            }
+
+            if(!context.Users.Any(e => e.UserName == data.Username) || !context.Wallets.Any(e=> e.Id == data.TargetId))
+            {
+                return BadRequest();
+            }
+
+            var source = context.Wallets.FirstOrDefault(e => e.Id == data.SourceId);
+            var destinationUser = context.Users.Include(e => e.Wallets).FirstOrDefault(e => e.UserName == data.Username);
+            var destination = destinationUser.Wallets.FirstOrDefault(e => e.Id == data.TargetId);
+
+            if(destination == null || source.Amount < data.Amount)
+            {
+                return BadRequest();
+            }
+
+            source.Amount -= data.Amount;
+            destination.Amount += data.Amount;
+
+            var transaction = new Transaction
+            {
+                SourceWalletId = source.Id,
+                DestinationWalletId = destination.Id,
+                Date = DateTime.Now,
+                Amount = data.Amount
+            };
+            context.Add(transaction);
+            context.SaveChanges();
+
+            return Ok();
+        }
+
         [HttpDelete]
         public IActionResult DeleteWallet([FromQuery] Guid data)
         {
@@ -62,10 +128,19 @@ namespace Endava_Project.Server.Controllers
             //---el oricum o sa ramana in tabelul cu toate portofelel doar ca nu o sa fie atribuit nici unui user
             //
 
+            var userId = userManager.GetUserId(User);
+            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
+
+            if (!user.Wallets.Any(x => x.Id == data))
+            {
+                return BadRequest();
+            }
+
             var delete_item = context.Wallets.FirstOrDefault(e => e.Id == data);
             context.Wallets.Remove(delete_item);
             context.SaveChanges();
             return Ok();
         }
+    
     }
 }

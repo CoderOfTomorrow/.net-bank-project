@@ -1,0 +1,151 @@
+﻿@page "/transactions"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Endava_Project.Shared
+@attribute [Authorize]
+@inject HttpClient HttpClient
+@inject NavigationManager navManager
+
+<h2>Transactions history : </h2>
+
+@if(transaction_list == null)
+{
+
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Outbound transfers :</h5>
+            @if (MadeTransactions.Count > 0)
+            {
+                <table style="width:100%">
+                    <tr>
+                        <th>SourceWalletId</th>
+                        <th>DestinationWalletId</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                    @foreach (var t in MadeTransactions)
+                    {
+                        <tr>
+                            <td>@t.SourceWalletId</td>
+                            <td>@t.DestinationWalletId</td>
+                            <td>@t.Amount</td>
+                            <td>@t.Date</td>
+                        </tr>
+                    }
+                </table>
+            }
+            else
+            {
+                <h6 class="card-subtitle mb-2 text-muted">You don't have any made transaction...</h6>
+            }
+            <br />
+
+            <h5 class="card-title">Transfers Recived :</h5>
+            @if (RecivedTransactions.Count > 0)
+            {
+                <table style="width:100%">
+                    <tr>
+                        <th>SourceWalletId</th>
+                        <th>DestinationWalletId</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                    @foreach (var t in RecivedTransactions)
+                    {
+                        <tr>
+                            <td>@t.SourceWalletId</td>
+                            <td>@t.DestinationWalletId</td>
+                            <td>@t.Amount</td>
+                            <td>@t.Date</td>
+                        </tr>
+                    }
+                </table>
+            }
+            else
+            {
+                <h6 class="card-subtitle mb-2 text-muted">You don't have any recived transaction...</h6>
+            }
+            <br />
+
+            <h5 class="card-title">Intern Transfers :</h5>
+            @if (InternTransactions.Count>0)
+            {
+                <table style="width:100%">
+                    <tr>
+                        <th>SourceWalletId</th>
+                        <th>DestinationWalletId</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                    @foreach (var t in InternTransactions)
+                    {
+                        <tr>
+                            <td>@t.SourceWalletId</td>
+                            <td>@t.DestinationWalletId</td>
+                            <td>@t.Amount</td>
+                            <td>@t.Date</td>
+                        </tr>  
+                    }
+                </table>
+            }
+            else
+            {
+                <h6 class="card-subtitle mb-2 text-muted">You don't have any intern transaction...</h6>
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    public List<Transaction> transaction_list { get; set; }
+    public List<Wallet> wallets { get; set; }
+    public List<Transaction> MadeTransactions = new List<Transaction>();
+    public List<Transaction> RecivedTransactions = new List<Transaction>();
+    public List<Transaction> InternTransactions = new List<Transaction>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            transaction_list = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/wallet/transactions");
+            wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+            SortTransactions();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public void SortTransactions()
+    {
+        foreach(var t in transaction_list)
+        {
+            if (!CheckTransactions(t))
+                InternTransactions.Add(t);
+            foreach(var w in wallets)
+            {
+                if (w.Id == t.SourceWalletId && CheckTransactions(t))
+                    MadeTransactions.Add(t);
+                if (w.Id == t.DestinationWalletId && CheckTransactions(t))
+                    RecivedTransactions.Add(t);
+            }
+        }
+    }
+
+    public bool CheckTransactions(Transaction data) {
+        int count = 0;
+        foreach(var w in wallets)
+        {
+            if (w.Id == data.SourceWalletId || w.Id == data.DestinationWalletId)
+                count++;
+        }
+        if (count > 1)
+            return false;
+        return true;
+    }
+}
