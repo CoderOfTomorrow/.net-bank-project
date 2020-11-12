@@ -22,15 +22,15 @@ namespace Endava_Project.Server.Controllers
         }
 
         [HttpGet]
-        public List<string> GetUsers()
+        [Route("{username}")]
+        public bool CheckUser(string username)
         {
-            var users_list = new List<string>();
-            foreach(var data in context.Users)
+            foreach(var user in context.Users)
             {
-                string info = data.UserName;
-                users_list.Add(info);
+                if (user.UserName == username)
+                    return true;
             }
-            return users_list;
+            return false;
         }
     }
 }

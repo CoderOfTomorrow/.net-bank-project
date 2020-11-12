@@ -24,8 +24,8 @@ else
             <div class="row">
                 <div class="col-6">
                     <label>Recipient's name :</label>
-                    <input type="email" class="form-control" placeholder="Recipient's name..." @bind="data.Username">
-                    @if (StatusData(1,data.Username))
+                    <input type="email" class="form-control" placeholder="Recipient's name..." @bind="data.Username" @onfocusout=CheckUsername>
+                    @if (usernameStatus)
                     {
                         <small class="form-text text-success">Recipient's name is valid.</small>
                     }
@@ -37,7 +37,7 @@ else
                 <div class="col-6">
                     <label>Recipient's Wallet Id :</label>
                     <input class="form-control" placeholder="Recipient's Wallet Id..." @bind="targetId">
-                    @if (StatusData(2,targetId))
+                    @if (CheckWalletId(targetId))
                     {
                         <small class="form-text text-success">The Wallet Id format is valid.</small>
                     }
@@ -51,7 +51,7 @@ else
                 <div class="col-6 p-2">
                     <label>Amount :</label>
                     <input type="text" class="form-control" placeholder="The Amount..." @bind="Amount">
-                    @if (StatusData(3,Amount))
+                    @if (CheckAmount(Amount))
                     {
                         <small class="form-text text-success">The amount entered is valid.</small>
                     }
@@ -62,7 +62,7 @@ else
                 </div>
                 <div class="col-6 p-3">
                     <br />
-                    @if (StatusData(1,data.Username) && StatusData(2,targetId) && StatusData(3,Amount))
+                    @if (usernameStatus && CheckWalletId(targetId) && CheckAmount(Amount))
                     {
                         <button class="btn btn-danger" @onclick=MakeTransfer>Finish the transfer</button>
                         <small class="form-text text-success">The transfer can be done now.</small>
@@ -90,7 +90,7 @@ else
     public string sourceWalletId { get; set; }
     public Wallet wallet { get; set; }
 
-    public List<string> users = new List<string>();
+    public bool usernameStatus = false;
     public bool Status = true;
     public string Amount, targetId;
     public TransferDto data = new TransferDto {
@@ -102,7 +102,6 @@ else
         try
         {
             wallet = await HttpClient.GetFromJsonAsync<Wallet>($"api/wallet/{sourceWalletId}");
-            users = await HttpClient.GetFromJsonAsync<List<string>>($"api/helper");
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -110,20 +109,25 @@ else
         }
     }
 
-    private bool StatusData(int i,string info)
+
+    private async Task CheckUsername()
+    {
+        usernameStatus = await HttpClient.GetFromJsonAsync<bool>($"api/helper/{data.Username}");
+    }
+
+    private bool CheckWalletId(string info)
+    {
+        Guid id;
+        if (Guid.TryParse(info, out id) && id.ToString() != sourceWalletId)
+            return true;
+        return false;
+    }
+
+    private bool CheckAmount(string info)
     {
         decimal number;
-        Guid id;
-        if (i == 1)
-        {
-            foreach (var s in users)
-                if (info == s )
-                    return true;
-        }
-        if (i == 2 && Guid.TryParse(info,out id) && id.ToString() != sourceWalletId)
-            return true;
-        if (i == 3 && Decimal.TryParse(info,out number))
-            if(number <= wallet.Amount && number>=1)
+        if (Decimal.TryParse(info, out number))
+            if (number <= wallet.Amount && number >= 1)
                 return true;
         return false;
     }
