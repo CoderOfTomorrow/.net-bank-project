@@ -22,19 +22,38 @@ namespace Endava_Project.Server.Controllers
         }
 
         [HttpGet]
-        [Route("{filter}")]
-        public List<Transaction> GetTransactions(string filter)
+        [Route("{typeFilter}/{sortFilter}/{orderFilter}")]
+        public List<Transaction> GetTransactions(string typeFilter,string sortFilter,string orderFilter)
         {
             var transactionsList = new List<Transaction>();
             var userId = userManager.GetUserId(User);
             var idList = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.Select(e => e.Id).ToList();
 
-            transactionsList = filter switch
+            transactionsList = typeFilter switch
             {
                 "Made" => context.Transactions.Where(t => idList.Contains(t.SourceWalletId) && t.DestinationUserId != t.SourceUserId).ToList(), //for outgoing transactions
                 "Recived" => context.Transactions.Where(t => idList.Contains(t.DestinationWalletId) && t.DestinationUserId != t.SourceUserId).ToList(), //for recived transactions
                 "Intern" => context.Transactions.Where(t => idList.Contains(t.SourceWalletId) && idList.Contains(t.DestinationWalletId)).ToList(), //for transactions betweem our own wallets
                 _ => context.Transactions.Where(t => idList.Contains(t.SourceWalletId) || idList.Contains(t.DestinationWalletId)).ToList(), //for all transactions
+            };
+
+            transactionsList = sortFilter switch
+            {
+                "Date" => transactionsList = orderFilter switch
+                {
+                    "Ascendent" => transactionsList.OrderBy(e => e.Date).ToList(),
+                    _ => transactionsList.OrderByDescending(e => e.Date).ToList()
+                },
+
+
+                "Currency" => transactionsList = orderFilter switch
+                {
+                    "Ascendent" => transactionsList.OrderBy(e => e.Amount).ThenBy(e => e.Currency).ToList(),
+                    _ => transactionsList.OrderByDescending(e => e.Amount).ThenByDescending(e => e.Currency).ToList()
+                },
+
+                _ => transactionsList.OrderByDescending(e => e.Date).ToList()
+                
             };
 
             transactionsList = transactionsList.Distinct().ToList();

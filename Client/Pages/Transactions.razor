@@ -22,7 +22,7 @@ else
                 <div class="col">
                     <h4>Show : </h4>
 
-                    <select @bind="@filterName">
+                    <select @bind="@typeFilter">
                         <option value="All">All transactions</option>
                         <option value="Made">Outbound transactions</option>
                         <option value="Recived">Recived transactions</option>
@@ -32,19 +32,19 @@ else
                 <div class="col">
                     <h4>Sort by : </h4>
 
-                    <select>
-                        <option value="">Amount & Currency</option>
-                        <option value="">Transaction Date</option>
-                        <option value="">Destination</option>
+                    <select @bind="@sortFilter">
+                        <option value="Date">Date</option>
+                        <option value="Currency">Currency</option>
+                        <option value="Destination">Destination</option>
                     </select>
                 </div>
 
                 <div class="col">
                     <h4>Sort order : </h4>
 
-                    <select>
-                        <option value="">Ascendent</option>
-                        <option value="">Descendent</option>
+                    <select @bind="@orderFilter">
+                        <option value="Descendent">Descendent</option>
+                        <option value="Ascendent">Ascendent</option>
                     </select>
                 </div>
 
@@ -84,8 +84,13 @@ else
 
 @code {
     private List<Transaction> transactionsList = new List<Transaction>();
-    private string initialFilter = "All";
-    private string filterName { get { return initialFilter; } set { initialFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string initialTypeFilter = "All";
+    private string typeFilter { get { return initialTypeFilter; } set { initialTypeFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string initialSortFilter = "Date";
+    private string sortFilter { get { return initialSortFilter; } set { initialSortFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string initialOrderFilter = "Descendent";
+    private string orderFilter { get { return initialOrderFilter; } set { initialOrderFilter = value; LoadTransactions().GetAwaiter(); } }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -101,8 +106,7 @@ else
 
     public async Task LoadTransactions()
     {
-
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/{filterName}");
+        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/{typeFilter}/{sortFilter}/{orderFilter}");
         StateHasChanged();
     }
 
