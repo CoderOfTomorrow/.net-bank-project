@@ -1,6 +1,4 @@
 ﻿@page "/transactions"
-@using System
-@using System.Reflection
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Endava_Project.Shared
@@ -10,7 +8,7 @@
 
 <h2>Transactions history </h2>
 
-@if(transactionsList == null)
+@if(transactionsData.TransactionsList == null)
 {
     <h3>Nu aveti nici o transactie la moment...</h3>
 }
@@ -35,7 +33,14 @@ else
                     <select @bind="@sortFilter">
                         <option value="Date">Date</option>
                         <option value="Currency">Currency</option>
-                        <option value="Destination">Destination</option>
+                        @if (typeFilter == "Made")
+                        {
+                            <option value="Target">Destination</option>
+                        }
+                        @if (typeFilter == "Recived")
+                        {
+                            <option value="Target">Source</option>
+                        }
                     </select>
                 </div>
 
@@ -51,27 +56,78 @@ else
             </div>
             <hr />
             <br />
-            @if (transactionsList.Count > 0)
+            @if (transactionsData.TransactionsCount > 0)
             {
                 <table style="width:100%">
                     <tr>
-                        <th>Source Wallet Id</th>
-                        <th>Destination Wallet Id</th>
+                        @switch (typeFilter)
+                        {
+                            case "Made":
+                                {
+                                    <th>Destination</th>
+ }
+                                break;
+                            case "Recived":
+                                {
+                                    <th>Source</th>
+}
+                                break;
+                            case "Intern":
+                                break;
+                            default:
+                                {
+                                    <th>Source</th>
+                                    <th>Destination</th>
+}
+                                break;
+                        }
                         <th>Amount</th>
                         <th>Currency</th>
                         <th>Transaction Date</th>
                     </tr>
-                    @foreach (var t in transactionsList)
+                    @foreach (var t in transactionsData.TransactionsList)
                     {
                         <tr>
-                            <td>@t.SourceWalletId</td>
-                            <td>@t.DestinationWalletId</td>
+                            @switch (typeFilter)
+                            {
+                                case "Made":
+                                    {
+                                        <td>@t.DestinationUserName</td>
+}
+                                    break;
+                                case "Recived":
+                                    {
+                                        <td>@t.SourceUserName</td>
+}
+                                    break;
+                                case "Intern":
+                                    break;
+                                default:
+                                    {
+                                        <td>@t.SourceUserName</td>
+                                        <td>@t.DestinationUserName</td>
+}
+                                    break;
+                            }
                             <td>@t.Amount</td>
                             <td>@t.Currency</td>
                             <td>@t.Date</td>
                         </tr>
                     }
                 </table>
+                <hr />
+                @if (CalculatePageCount() > 1)
+                {
+                    <div class="pagination">
+                        <a @onclick="() => LoadTransactions(Math.Clamp(pageNumber - 1, 1, CalculatePageCount()))">&laquo;</a>
+                        @for (int i = Math.Clamp(pageNumber - 2, 1, CalculatePageCount()); i <= Math.Clamp(pageNumber + 2, 1, CalculatePageCount()); i++)
+                        {
+                            var pn = i;
+                            <a class="@(pn == pageNumber ? "active" : "")" @onclick="() => LoadTransactions(pn)">@pn</a>
+                        }
+                        <a @onclick="() => LoadTransactions(Math.Clamp(pageNumber + 1, 1, CalculatePageCount()))">&raquo;</a>
+                    </div>
+                }
             }
             else
             {
@@ -83,20 +139,25 @@ else
 
 
 @code {
-    private List<Transaction> transactionsList = new List<Transaction>();
+    private TransactionHistoryData transactionsData = new TransactionHistoryData {
+        TransactionsList = new List<TransactionDto>()
+    };
     private string initialTypeFilter = "All";
-    private string typeFilter { get { return initialTypeFilter; } set { initialTypeFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string typeFilter { get { return initialTypeFilter; } set { initialTypeFilter = value; LoadTransactions(pageNumber).GetAwaiter(); } }
     private string initialSortFilter = "Date";
-    private string sortFilter { get { return initialSortFilter; } set { initialSortFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string sortFilter { get { return initialSortFilter; } set { initialSortFilter = value; LoadTransactions(pageNumber).GetAwaiter(); } }
     private string initialOrderFilter = "Descendent";
-    private string orderFilter { get { return initialOrderFilter; } set { initialOrderFilter = value; LoadTransactions().GetAwaiter(); } }
+    private string orderFilter { get { return initialOrderFilter; } set { initialOrderFilter = value; LoadTransactions(pageNumber).GetAwaiter(); } }
+
+    private int pageNumber = 1;
+    private int itemsPerPage = 10;
 
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            await LoadTransactions();
+            await LoadTransactions(pageNumber);
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -104,10 +165,18 @@ else
         }
     }
 
-    public async Task LoadTransactions()
+    public async Task LoadTransactions(int pNam)
     {
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/{typeFilter}/{sortFilter}/{orderFilter}");
+        transactionsData = await HttpClient.GetFromJsonAsync<TransactionHistoryData>($"api/transaction/{typeFilter}/{sortFilter}/{orderFilter}/{itemsPerPage}/{pNam}");
+        pageNumber = pNam;
         StateHasChanged();
+    }
+
+    private int CalculatePageCount()
+    {
+        var div = transactionsData.TransactionsCount / itemsPerPage;
+        var mod = transactionsData.TransactionsCount % itemsPerPage;
+        return div + (mod > 0 ? 1 : 0);
     }
 
 }

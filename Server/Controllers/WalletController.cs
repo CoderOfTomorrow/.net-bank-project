@@ -95,8 +95,10 @@ namespace Endava_Project.Server.Controllers
             {
                 SourceWalletId = source.Id,
                 SourceUserId = Guid.Parse(userId),
+                SourceUserName = user.UserName,
                 DestinationWalletId = destination.Id,
                 DestinationUserId = Guid.Parse(destinationUser.Id),
+                DestinationUserName = destinationUser.UserName,
                 Date = DateTime.Now,
                 Amount = data.Amount,
                 Currency = source.Currency
