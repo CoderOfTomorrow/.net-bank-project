@@ -37,19 +37,19 @@ namespace Endava_Project.Server
             Currencies = CurrencyDb.Select(e => e.Name).ToList();
         }
 
-        public static decimal CheckCurrency(decimal amount,string source_currency,string destination_currency)
+        public static decimal CheckCurrency(decimal sourceAmount,string sourceCurrency,string destinationCurrency)
         {
            
-            decimal destination_amount=0;
-            if (source_currency == destination_currency)
-                return amount;
+            decimal destinationAmount=0;
+            if (sourceCurrency == destinationCurrency)
+                return sourceAmount;
             else
             {
-                decimal source_value = CurrencyDb.FirstOrDefault(e => e.Name == source_currency).Value;
-                decimal destination_value = CurrencyDb.FirstOrDefault(e => e.Name == destination_currency).Value;
-                destination_amount = amount * source_value / destination_value;
+                decimal sourceValue = CurrencyDb.FirstOrDefault(e => e.Name == sourceCurrency).Value;
+                decimal destinationValue = CurrencyDb.FirstOrDefault(e => e.Name == destinationCurrency).Value;
+                destinationAmount = sourceAmount * sourceValue / destinationValue;
             }
-            return destination_amount;
+            return destinationAmount;
         }
     }
 }

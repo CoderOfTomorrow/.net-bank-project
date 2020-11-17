@@ -88,8 +88,8 @@ namespace Endava_Project.Server.Controllers
             }
 
             source.Amount -= data.Amount;
-            decimal desAmount = CurrencyManager.CheckCurrency(data.Amount, source.Currency, destination.Currency);
-            destination.Amount += desAmount;
+            decimal destinationAmount = CurrencyManager.CheckCurrency(data.Amount, source.Currency, destination.Currency);
+            destination.Amount += destinationAmount;
 
             var transaction = new Transaction
             {
