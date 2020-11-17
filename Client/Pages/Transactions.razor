@@ -22,11 +22,11 @@ else
                 <div class="col">
                     <h4>Show : </h4>
 
-                    <select @bind="@methodName">
-                        <option value="LoadAllTransactions">All transactions</option>
-                        <option value="LoadMadeTransactions">Outbound transactions</option>
-                        <option value="LoadRecivedTransactions">Recived transactions</option>
-                        <option value="LoadInternTransactions">Intern transactions</option>
+                    <select @bind="@filterName">
+                        <option value="All">All transactions</option>
+                        <option value="Made">Outbound transactions</option>
+                        <option value="Recived">Recived transactions</option>
+                        <option value="Intern">Intern transactions</option>
                     </select>
                 </div>
                 <div class="col">
@@ -84,14 +84,14 @@ else
 
 @code {
     private List<Transaction> transactionsList = new List<Transaction>();
-    private string str;
-    private string methodName { get { return str; } set { str = value; CallMethod(methodName).GetAwaiter(); } }
+    private string initialFilter = "All";
+    private string filterName { get { return initialFilter; } set { initialFilter = value; LoadTransactions().GetAwaiter(); } }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            await LoadAllTransactions();
+            await LoadTransactions();
         }
         catch (AccessTokenNotAvailableException exception)
         {
@@ -99,42 +99,11 @@ else
         }
     }
 
-    public async Task LoadAllTransactions()
+    public async Task LoadTransactions()
     {
 
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/transactions");
-    }
-
-    public async Task LoadMadeTransactions()
-    {
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/madetransactions");
-    }
-
-    public async Task LoadRecivedTransactions()
-    {
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/recivedtransactions");
-    }
-
-    public async Task LoadInternTransactions()
-    {
-        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/interntransactions");
-    }
-
-    public async Task CallMethod(string data)
-    {
-        //Type thisType = this.GetType();
-        //MethodInfo theMethod = thisType.GetMethod(data);
-        //theMethod.Invoke(this, null);
-
-        if (data == "LoadMadeTransactions")
-            await LoadMadeTransactions();
-        if (data == "LoadRecivedTransactions")
-            await LoadRecivedTransactions();
-        if (data == "LoadInternTransactions")
-            await LoadInternTransactions();
-        if (data == "LoadAllTransactions")
-            await LoadAllTransactions();
+        transactionsList = await HttpClient.GetFromJsonAsync<List<Transaction>>($"api/transaction/{filterName}");
         StateHasChanged();
-
     }
+
 }
