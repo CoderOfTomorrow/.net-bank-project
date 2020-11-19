@@ -43,19 +43,6 @@ namespace Endava_Project.Server.Controllers
             return wallet;
         }
 
-        [HttpGet]
-        [Route("transactions")]
-        public List<Transaction> GetTransactions()
-        {
-            var transactions_list = new List<Transaction>();
-            var userId = userManager.GetUserId(User);
-            var id_list = context.Users.Include(e => e.Wallets).FirstOrDefault(x => x.Id == userId).Wallets.Select(e => e.Id).ToList();
-            transactions_list = context.Transactions.Where(t => id_list.Contains(t.SourceWalletId) || id_list.Contains(t.DestinationWalletId)).ToList();
-            transactions_list = transactions_list.Distinct().ToList();
-
-            return transactions_list;
-        }
-
         [HttpPost]
         public IActionResult CreateWallet([FromQuery] string currency)
         {
@@ -101,14 +88,20 @@ namespace Endava_Project.Server.Controllers
             }
 
             source.Amount -= data.Amount;
-            destination.Amount += data.Amount;
+            decimal destinationAmount = CurrencyManager.CheckCurrency(data.Amount, source.Currency, destination.Currency);
+            destination.Amount += destinationAmount;
 
             var transaction = new Transaction
             {
                 SourceWalletId = source.Id,
+                SourceUserId = Guid.Parse(userId),
+                SourceUserName = user.UserName,
                 DestinationWalletId = destination.Id,
+                DestinationUserId = Guid.Parse(destinationUser.Id),
+                DestinationUserName = destinationUser.UserName,
                 Date = DateTime.Now,
-                Amount = data.Amount
+                Amount = data.Amount,
+                Currency = source.Currency
             };
             context.Add(transaction);
             context.SaveChanges();

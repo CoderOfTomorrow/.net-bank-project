@@ -35,9 +35,9 @@
 
     <select @bind="currency">
         <option value=" " selected>Choose a currency :</option>
-        @foreach (var type in Enum.GetValues(typeof(Currency_type)))
+        @foreach (var type in CurrencyList)
         {
-            <option value=@type>@type.ToString()</option>
+            <option value=@type>@type</option>
         }
     </select>
     <button class="btn btn-info" @onclick="()=> CreateWallet()">Add</button>
@@ -45,7 +45,8 @@
 </div>
 
 @code {
-    private enum Currency_type { USD, EU, MD, UK };
+    private CurrencyList CurrencyType;
+    private List<String> CurrencyList = new List<String>();
     private List<Wallet> wallets = new List<Wallet>();
     private string currency;
 
@@ -55,11 +56,18 @@
         try
         {
             wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+            await LoadCurrency();
         }
         catch (AccessTokenNotAvailableException exception)
         {
             exception.Redirect();
         }
+    }
+
+    protected async Task LoadCurrency()
+    {
+        CurrencyType = await HttpClient.GetFromJsonAsync<CurrencyList>("api/currency");
+        CurrencyList.AddRange(CurrencyType.Currencies);
     }
 
     protected async Task LoadData()
