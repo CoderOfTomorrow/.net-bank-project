@@ -149,6 +149,7 @@ else
     private string initialOrderFilter = "Descendent";
     private string orderFilter { get { return initialOrderFilter; } set { initialOrderFilter = value; LoadTransactions(pageNumber).GetAwaiter(); } }
 
+
     private int pageNumber = 1;
     private int itemsPerPage = 10;
 
