@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Endava_Project.Server.Data;
@@ -53,8 +54,8 @@ namespace Endava_Project.Server.Controllers
 
                 "Currency" => transactionsList = orderFilter switch
                 {
-                    "Ascendent" => transactionsList.OrderBy(e => e.Amount).ThenBy(e => e.Currency).ToList(),
-                    _ => transactionsList.OrderByDescending(e => e.Amount).ThenByDescending(e => e.Currency).ToList()
+                    "Ascendent" => transactionsList.OrderBy(e => e.Currency).ThenBy(e => e.Amount).ToList(),
+                    _ => transactionsList.OrderByDescending(e => e.Currency).ThenByDescending(e => e.Amount).ToList()
                 },
 
                 "Target" => transactionsList = typeFilter switch
@@ -88,6 +89,53 @@ namespace Endava_Project.Server.Controllers
             }
 
             return transactionData;
+        }
+
+        [HttpPost]
+        [Route("transfer")]
+        public IActionResult MakeTransfer([FromBody] TransferDto data)
+        {
+            var userId = userManager.GetUserId(User);
+            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == userId);
+            if (!user.Wallets.Any(x => x.Id == data.SourceId))
+            {
+                return BadRequest();
+            }
+
+            if (!context.Users.Any(e => e.UserName == data.Username) || !context.Wallets.Any(e => e.Id == data.TargetId))
+            {
+                return BadRequest();
+            }
+
+            var source = context.Wallets.FirstOrDefault(e => e.Id == data.SourceId);
+            var destinationUser = context.Users.Include(e => e.Wallets).FirstOrDefault(e => e.UserName == data.Username);
+            var destination = destinationUser.Wallets.FirstOrDefault(e => e.Id == data.TargetId);
+
+            if (destination == null || source.Amount < data.Amount)
+            {
+                return BadRequest();
+            }
+
+            source.Amount -= data.Amount;
+            decimal destinationAmount = CurrencyManager.CheckCurrency(data.Amount, source.Currency, destination.Currency);
+            destination.Amount += destinationAmount;
+
+            var transaction = new Transaction
+            {
+                SourceWalletId = source.Id,
+                SourceUserId = Guid.Parse(userId),
+                SourceUserName = user.UserName,
+                DestinationWalletId = destination.Id,
+                DestinationUserId = Guid.Parse(destinationUser.Id),
+                DestinationUserName = destinationUser.UserName,
+                Date = DateTime.Now,
+                Amount = data.Amount,
+                Currency = source.Currency
+            };
+            context.Add(transaction);
+            context.SaveChanges();
+
+            return Ok();
         }
     }
 }

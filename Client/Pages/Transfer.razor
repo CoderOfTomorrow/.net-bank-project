@@ -142,7 +142,7 @@ else
             data.Amount = Decimal.Parse(Amount);
             data.Currency = wallet.Currency;
 
-            var response = await HttpClient.PostAsJsonAsync($"api/wallet/transfer", data);
+            var response = await HttpClient.PostAsJsonAsync($"api/transaction/transfer", data);
             if (response.IsSuccessStatusCode)
             {
                 navManager.NavigateTo("wallets");

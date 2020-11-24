@@ -14,6 +14,7 @@ using System.Linq;
 using Endava_Project.Server.Data;
 using Endava_Project.Server.Models;
 using System.Security.Claims;
+using MediatR;
 
 namespace Endava_Project.Server
 {
@@ -48,6 +49,8 @@ namespace Endava_Project.Server
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+
+            services.AddMediatR(typeof(Startup));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
