@@ -1,0 +1,109 @@
+﻿@page "/cashbycode"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Endava_Project.Shared
+@attribute [Authorize]
+@inject HttpClient HttpClient
+@inject NavigationManager navManager
+
+<div class="card">
+    <div class="card-body">
+        <h3>CashByCode</h3>
+        <div class="row">
+            <div class="col-4">
+                <label>Select a valid wallet :</label>
+                @if (wallets.Count > 0)
+                {
+                    <select @bind="cashByCode.SourceWalletId" class="form-control">
+                        @foreach (var w in wallets)
+                        {
+                            <option value="@w.Id" class="dropdown-item">Currency - @w.Currency , Amount - @w.Amount</option>
+                        }
+                    </select>
+                }
+            </div>
+            <div class="col-4">
+                <label>Amount :</label>
+                <input type="text" class="form-control" placeholder="The Amount..." @bind="cashByCode.Amount">
+            </div>
+            <div class="col-4">
+                <button class="btn btn-danger" @onclick=GenerateCashByCode>Do it !</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br />
+<h3>Active CashByCode :</h3>
+@if (list.Count > 0)
+{
+    <table style="width:100%">
+        <tr>
+            <th>Code to use</th>
+            <th>Currency</th>
+            <th>Amount</th>
+            <th>Active until</th>
+        </tr>
+        @foreach (var l in list)
+        {
+            <tr>
+                <td>@l.GeneratedCode</td>
+                <td>@l.Currency</td>
+                <td>@l.Amount</td>
+                <td>@l.ExpireTime.ToString(@"hh\:mm\:ss")</td>
+            </tr>
+        }
+    </table>
+}
+
+
+@code {
+    private List<WalletDto> wallets = new List<WalletDto>();
+    private List<CashByCodeDto> list = new List<CashByCodeDto>();
+    private CashByCodeDto cashByCode = new CashByCodeDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
+            await GetAllCashByCode();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    public async Task GetAllCashByCode()
+    {
+        list = await HttpClient.GetFromJsonAsync<List<CashByCodeDto>>("api/cashbycode/getall");
+
+    }
+
+    public async Task GenerateCashByCode()
+    {
+        try
+        {
+
+            var response = await HttpClient.PostAsJsonAsync($"api/cashbycode/generate", cashByCode);
+            if (response.IsSuccessStatusCode)
+            {
+                await GetAllCashByCode();
+                StateHasChanged();
+            }
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private bool CheckAmount(string info)
+    {
+        decimal number;
+        if (Decimal.TryParse(info, out number))
+            return true;
+        return false;
+    }
+}
