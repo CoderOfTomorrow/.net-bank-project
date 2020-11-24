@@ -19,14 +19,13 @@
                         <h5 class="card-title">Currency : @x.Currency</h5>
                         <h6 class="card-subtitle mb-2 text-muted">Amount : @x.Amount</h6>
                         <h6 class="card-subtitle mb-2 text-muted">Id : @x.Id</h6>
-                        <button class="btn btn-light"  @onclick="(e => MakeTransfer(x.Id))">Make a transfer</button>
+                        <button class="btn btn-light" @onclick="(e => MakeTransfer(x.Id))">Make a transfer</button>
                         <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
                     </div>
                 </div>
             </div>
         }
     </div>
-
 }
 
 <div>
@@ -47,7 +46,7 @@
 @code {
     private CurrencyList CurrencyType;
     private List<String> CurrencyList = new List<String>();
-    private List<Wallet> wallets = new List<Wallet>();
+    private List<WalletDto> wallets = new List<WalletDto>();
     private string currency;
 
 
@@ -55,7 +54,7 @@
     {
         try
         {
-            wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+            wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
             await LoadCurrency();
         }
         catch (AccessTokenNotAvailableException exception)
@@ -72,7 +71,7 @@
 
     protected async Task LoadData()
     {
-        wallets = await HttpClient.GetFromJsonAsync<List<Wallet>>("api/wallet");
+        wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
     }
 
     private async Task CreateWallet()
@@ -97,7 +96,7 @@
 
     private async Task DeleteWallet(Guid data)
     {
-        await HttpClient.DeleteAsync("api/wallet?data=" + data.ToString());
+        await HttpClient.DeleteAsync("api/wallet?walletId=" + data.ToString());
         await LoadData();
     }
 

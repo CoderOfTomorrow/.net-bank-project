@@ -1,6 +1,26 @@
 ﻿@page "/test"
+@using Endava_Project.Shared
 
-<h2>Pentru teste pesonale...</h2>
+
 
 @code {
+
+
+
+    public string nume="nicu";
+    public string myVar;
+    public void CallMe(string info)
+    {
+        nume = info;
+    }
+
+    public string data
+    {
+        get { return myVar; }
+        set
+        {
+            myVar = value;
+            CallMe(data);
+        }
+    }
 }

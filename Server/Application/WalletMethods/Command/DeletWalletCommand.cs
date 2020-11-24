@@ -26,10 +26,10 @@ namespace Endava_Project.Server.Application.WalletMethods.Command
 
         public async Task<CommandResult> Handle(DeletWalletCommand command, CancellationToken cancellationToken)
         {
-            
-            var user = context.Users.Include(x => x.Wallets).FirstOrDefault(x => x.Id == command.UserId);
 
-            if (!user.Wallets.Any(x => x.Id == command.WalletId))
+            var user = await context.Users.Include(x => x.Wallets).FirstOrDefaultAsync(x => x.Id == command.UserId);
+
+            if (user == null || !user.Wallets.Any(x => x.Id == command.WalletId))
             {
                 return CommandResult.ReturnFailure();
             }

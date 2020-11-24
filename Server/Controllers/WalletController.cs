@@ -16,13 +16,11 @@ namespace Endava_Project.Server.Controllers
     [ApiController]
     public class WalletController : ControllerBase
     {
-        private readonly ApplicationDbContext context;
         private readonly UserManager<ApplicationUser> userManager;
         private readonly IMediator mediator;
 
-        public WalletController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IMediator mediator)
+        public WalletController(UserManager<ApplicationUser> userManager, IMediator mediator)
         {
-            this.context = context;
             this.userManager = userManager;
             this.mediator = mediator;
         }

@@ -88,7 +88,7 @@ else
 @code {
     [Parameter]
     public string sourceWalletId { get; set; }
-    public Wallet wallet { get; set; }
+    public WalletDto wallet { get; set; }
 
     public bool usernameStatus = false;
     public bool Status = true;
@@ -101,7 +101,7 @@ else
     {
         try
         {
-            wallet = await HttpClient.GetFromJsonAsync<Wallet>($"api/wallet/{sourceWalletId}");
+            wallet = await HttpClient.GetFromJsonAsync<WalletDto>($"api/wallet/{sourceWalletId}");
         }
         catch (AccessTokenNotAvailableException exception)
         {
