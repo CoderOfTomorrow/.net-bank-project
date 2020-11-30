@@ -2,7 +2,7 @@
 
 namespace Endava_Project.Shared
 {
-    public class Wallet
+    public class WalletDto
     {
         public Guid Id { get; set; }
         public decimal Amount { get; set; }
