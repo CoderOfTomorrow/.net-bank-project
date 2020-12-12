@@ -66,5 +66,24 @@ namespace Endava_Project.Server.Controllers
 
             return Ok();
         }
+
+        [HttpPost]
+        [Route("recive")]
+        public async Task<IActionResult> ReciveCashByCode([FromBody] CashByCodeDto data)
+        {
+            var command = new ReciveCashByCodeCommand
+            {
+                UserId = userManager.GetUserId(User),
+                WalletId = data.SourceWalletId,
+                Code = data.GeneratedCode
+            };
+
+            var commandResult = await mediator.Send(command);
+
+            if (!commandResult.IsSuccessful)
+                return BadRequest();
+
+            return Ok();
+        }
     }
 }

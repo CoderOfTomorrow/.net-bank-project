@@ -33,6 +33,9 @@ namespace Endava_Project.Server.Application.CashByCodeMethods.Command
         {
             int codeLenght = 6;
 
+            if (!context.Users.Any(e => e.Id == command.UserId))
+                return CommandResult.ReturnFailure();
+
             var user = await context.Users.Include(x => x.Wallets).FirstOrDefaultAsync(x => x.Id == command.UserId);
 
             if (!user.Wallets.Any(x => x.Id == command.SourceWalletId))
@@ -65,12 +68,21 @@ namespace Endava_Project.Server.Application.CashByCodeMethods.Command
 
         private async Task LifeSpan(Guid Id,IServiceScopeFactory serviceScopeFactory)
         {
-            await Task.Delay(3600000);
+            await Task.Delay(100000);
             using var scope = serviceScopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetService<ApplicationDbContext>();
-            var itemToRemove = dbContext.CashByCodeRepo.FirstOrDefault(e => e.Id == Id);
-            dbContext.CashByCodeRepo.Remove(itemToRemove);
-            await dbContext.SaveChangesAsync();
+            if (dbContext.CashByCodeRepo.Any(e => e.Id == Id))
+            {
+                var itemToRemove = dbContext.CashByCodeRepo.FirstOrDefault(e => e.Id == Id);
+                var wallet =  await dbContext.Users.
+                    Where(u => u.Id == itemToRemove.SourceUserId).
+                    SelectMany(u => u.Wallets).
+                    Where(w => w.Id == itemToRemove.SourceWalletId).
+                    FirstOrDefaultAsync();
+                wallet.Amount += itemToRemove.Amount;
+                dbContext.CashByCodeRepo.Remove(itemToRemove);
+                await dbContext.SaveChangesAsync();
+            }
         }
     }
 }
