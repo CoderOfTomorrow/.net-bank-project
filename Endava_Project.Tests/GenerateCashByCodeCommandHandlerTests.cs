@@ -1,18 +1,23 @@
-﻿using Endava_Project.Server.Application.WalletMethods.Command;
+﻿using Endava_Project.Server.Application.CashByCodeMethods.Command;
 using Endava_Project.Server.Data;
 using Endava_Project.Server.Models;
 using IdentityServer4.EntityFramework.Options;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Endava_Project.Tests
 {
-    public class CreateWalletCommandHandlerTests
+    public class GenerateCashByCodeCommandHandlerTests
     {
         private ApplicationDbContext context;
+        private readonly IServiceScopeFactory serviceScopeFactory;
+        private Guid wallet_id = Guid.NewGuid();
 
         [SetUp]
         public void Setup()
@@ -28,7 +33,15 @@ namespace Endava_Project.Tests
             var user = new ApplicationUser
             {
                 Id = "test_user_id",
-                Wallets = new List<Wallet>()
+                Wallets = new List<Wallet>
+                {
+                    new Wallet
+                    {
+                        Id = wallet_id,
+                        Amount = 100,
+                        Currency = "EUR"
+                    }
+                }
             };
 
             context.Add(user);
@@ -36,15 +49,16 @@ namespace Endava_Project.Tests
             context.SaveChanges();
         }
 
-        [Test] //Test pentru a verifica daca putem crea un Wallet cu un currency valid 
-        public async Task CreateWalletSuccessful()
+        [Test] 
+        public async Task GenerateCashByCodeSuccessful()
         {
-            var sut = new CreateWalletCommandHandler(context);
+            var sut = new GenerateCashByCodeHandler(context,serviceScopeFactory);
 
-            var command = new CreateWalletCommand
+            var command = new GenerateCashByCodeCommand
             {
+                SourceWalletId = wallet_id,
                 UserId = "test_user_id",
-                Currency = "EUR"
+                Amount = 100
             };
 
             var result = await sut.Handle(command, CancellationToken.None);
@@ -52,15 +66,16 @@ namespace Endava_Project.Tests
             Assert.IsTrue(result.IsSuccessful);
         }
 
-        [Test] //Test pentru a verifica daca putem crea un Wallet cu un currency invalid 
-        public async Task CreateWalletUnsuccessful()
+        [Test]
+        public async Task GenerateCashByCodeUnsuccessfulByAmount()
         {
-            var sut = new CreateWalletCommandHandler(context);
+            var sut = new GenerateCashByCodeHandler(context, serviceScopeFactory);
 
-            var command = new CreateWalletCommand
+            var command = new GenerateCashByCodeCommand
             {
+                SourceWalletId = wallet_id,
                 UserId = "test_user_id",
-                Currency = "EURR"
+                Amount = 200
             };
 
             var result = await sut.Handle(command, CancellationToken.None);
