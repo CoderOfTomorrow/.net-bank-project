@@ -1,7 +1,4 @@
 ﻿@page "/wallets"
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@using Endava_Project.Shared
 @attribute [Authorize]
 @inject HttpClient HttpClient
 @inject NavigationManager navManager
@@ -20,7 +17,10 @@
                         <h6 class="card-subtitle mb-2 text-muted">Amount : @x.Amount</h6>
                         <h6 class="card-subtitle mb-2 text-muted">Id : @x.Id</h6>
                         <button class="btn btn-light" @onclick="(e => MakeTransfer(x.Id))">Make a transfer</button>
-                        <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
+                        @if (x.DefaultStatus == false) 
+                        {
+                            <button class="btn btn-danger" @onclick="(e => DeleteWallet(x.Id))">Delete</button>
+                        }
                     </div>
                 </div>
             </div>
