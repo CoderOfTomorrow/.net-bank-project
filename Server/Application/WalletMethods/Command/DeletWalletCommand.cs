@@ -29,7 +29,7 @@ namespace Endava_Project.Server.Application.WalletMethods.Command
 
             var user = await context.Users.Include(x => x.Wallets).FirstOrDefaultAsync(x => x.Id == command.UserId);
 
-            if (user == null || !user.Wallets.Any(x => x.Id == command.WalletId))
+            if (user == null || !user.Wallets.Any(x => x.Id == command.WalletId) || user.Wallets.FirstOrDefault(e => e.Id == command.WalletId).DefaultStatus == true)
             {
                 return CommandResult.ReturnFailure();
             }

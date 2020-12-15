@@ -1,0 +1,61 @@
+﻿@page "/recivecashbycode"
+@attribute [Authorize]
+@inject HttpClient HttpClient
+
+
+<div class="card">
+    <div class="card-body">
+        <h4>Recive CashByCode</h4>
+        <div class="row">
+            <div class="col-6">
+                <label>Select a valid wallet :</label>
+                @if (wallets.Count > 0)
+                {
+                    <select class="form-control" @bind="cashByCode.SourceWalletId">
+                        @foreach (var w in wallets)
+                        {
+                            <option value="@w.Id" class="dropdown-item">Currency - @w.Currency , Amount - @w.Amount</option>
+                        }
+                    </select>
+                }
+            </div>
+            <div class="col-3">
+                <label>Code :</label>
+                <input type="text" class="form-control" placeholder="The Code..." @bind="cashByCode.GeneratedCode">
+            </div>
+            <div class="col-3">
+                <button class="btn btn-danger" @onclick=ReciveCash>Recive</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private List<WalletDto> wallets = new List<WalletDto>();
+    private CashByCodeDto cashByCode = new CashByCodeDto();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await LoadData();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
+    }
+
+    private async Task LoadData()
+    {
+        wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
+    }
+
+    private async Task ReciveCash()
+    {
+        await HttpClient.PostAsJsonAsync<CashByCodeDto>($"api/cashbycode/recive", cashByCode);
+        cashByCode.GeneratedCode = null;
+        await LoadData();
+    }
+}

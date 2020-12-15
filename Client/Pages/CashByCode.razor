@@ -1,7 +1,4 @@
 ﻿@page "/cashbycode"
-@using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-@using Endava_Project.Shared
 @attribute [Authorize]
 @inject HttpClient HttpClient
 @inject NavigationManager navManager
@@ -27,7 +24,7 @@
                 <input type="text" class="form-control" placeholder="The Amount..." @bind="cashByCode.Amount">
             </div>
             <div class="col-4">
-                <button class="btn btn-danger" @onclick=GenerateCashByCode>Do it !</button>
+                <button class="btn btn-danger" @onclick=GenerateCashByCode>Generate</button>
             </div>
         </div>
     </div>
@@ -66,7 +63,6 @@
     {
         try
         {
-            wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
             await GetAllCashByCode();
         }
         catch (AccessTokenNotAvailableException exception)
@@ -77,6 +73,7 @@
 
     public async Task GetAllCashByCode()
     {
+        wallets = await HttpClient.GetFromJsonAsync<List<WalletDto>>("api/wallet");
         list = await HttpClient.GetFromJsonAsync<List<CashByCodeDto>>("api/cashbycode/getall");
 
     }

@@ -8,30 +8,41 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="@(()=>IsClicked(""))">
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="wallets">
+            <NavLink class="nav-link" href="wallets" @onclick="@(()=>IsClicked(""))">
                 <span class="oi oi-list-rich" aria-hidden="true"></span> Wallets
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="transactions">
+            <NavLink class="nav-link" href="transactions" @onclick="@(()=>IsClicked(""))">
                 <span class="oi oi-list-rich" aria-hidden="true"></span> Transactions
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="CashByCode">
+            <NavLink class="nav-link" href="cashbycode" @onclick="@(()=>IsClicked("cashbycode"))">
                 <span class="oi oi-list-rich" aria-hidden="true"></span> CashByCode
             </NavLink>
+            @if (casbByCode == true)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="recivecashbycode">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span>Recive Cash
+                        </NavLink>
+                    </li>
+                </ul>
+            }
         </li>
     </ul>
 </div>
 
 @code {
     private bool collapseNavMenu = true;
+    private bool casbByCode;
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
@@ -39,4 +50,18 @@
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    private void IsClicked(string menu)
+    {
+        if(menu == "cashbycode")
+        {
+            casbByCode = true;
+        }
+        else
+        {
+            casbByCode = false;
+        }
+    }
+
+
 }

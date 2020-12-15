@@ -32,9 +32,6 @@ namespace Endava_Project.Server.Application.WalletMethods.Command
 
             var user = await context.Users.FindAsync(command.UserId);
 
-            if (user.Wallets == null)
-                user.Wallets = new List<Wallet>();
-
             var wallet = new Wallet
             {
                 Amount = 0,
