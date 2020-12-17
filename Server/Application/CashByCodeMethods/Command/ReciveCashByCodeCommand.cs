@@ -1,6 +1,5 @@
 ﻿using Endava_Project.Server.Data;
 using Endava_Project.Server.Helpers;
-using Endava_Project.Server.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -41,6 +40,13 @@ namespace Endava_Project.Server.Application.CashByCodeMethods.Command
 
             var wallet = await context.Wallets.FirstOrDefaultAsync(e => e.Id == command.WalletId);
             var cashByCode = await context.CashByCodeRepo.FirstOrDefaultAsync(e => e.GeneratedCode == command.Code);
+
+            if (cashByCode.ExpireTime < DateTime.Now)
+            {
+                context.CashByCodeRepo.Remove(cashByCode);
+                context.SaveChanges();
+                return CommandResult.ReturnFailure();
+            }
 
             wallet.Amount += CurrencyManager.CheckCurrency(cashByCode.Amount, cashByCode.Currency, wallet.Currency);
             context.CashByCodeRepo.Remove(cashByCode);
