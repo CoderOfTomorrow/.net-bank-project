@@ -4,14 +4,16 @@ using Endava_Project.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Endava_Project.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201122103516_CashbyCodev1")]
+    partial class CashbyCodev1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,9 +173,6 @@ namespace Endava_Project.Server.Data.Migrations
 
                     b.Property<string>("Currency")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("DefaultStatus")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 

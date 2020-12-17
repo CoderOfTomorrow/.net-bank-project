@@ -27,7 +27,7 @@ namespace Endava_Project.Server.Controllers
 
         [HttpGet]
         [Route("{typeFilter}/{sortFilter}/{orderFilter}/{itemsPerPage}/{pageNumber}")]
-        public TransactionHistoryData GetTransactions(string typeFilter,string sortFilter,string orderFilter, int itemsPerPage, int pageNumber)
+        public async Task<TransactionHistoryData> GetTransactions(string typeFilter,string sortFilter,string orderFilter, int itemsPerPage, int pageNumber)
         {
             var transactionData = new TransactionHistoryData
             {
@@ -42,7 +42,7 @@ namespace Endava_Project.Server.Controllers
                 OrderFilter = orderFilter
             };
 
-            var transactionsList = mediator.Send(query).GetAwaiter().GetResult();
+            var transactionsList = await mediator.Send(query);
 
             transactionData.TransactionsCount = transactionsList.Count;
             transactionsList = transactionsList.Skip((pageNumber - 1) * itemsPerPage).Take(itemsPerPage).ToList();

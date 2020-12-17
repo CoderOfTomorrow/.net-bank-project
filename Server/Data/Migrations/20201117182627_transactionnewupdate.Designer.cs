@@ -4,14 +4,16 @@ using Endava_Project.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Endava_Project.Server.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201117182627_transactionnewupdate")]
+    partial class transactionnewupdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -90,35 +92,6 @@ namespace Endava_Project.Server.Data.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
-            modelBuilder.Entity("Endava_Project.Server.Models.CashByCode", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Currency")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ExpireTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("GeneratedCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SourceUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SourceWalletId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CashByCodeRepo");
-                });
-
             modelBuilder.Entity("Endava_Project.Server.Models.Transaction", b =>
                 {
                     b.Property<Guid>("Id")
@@ -134,8 +107,8 @@ namespace Endava_Project.Server.Data.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("DestinationUserId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("DestinationUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("DestinationUserName")
                         .HasColumnType("nvarchar(max)");
@@ -143,8 +116,8 @@ namespace Endava_Project.Server.Data.Migrations
                     b.Property<Guid>("DestinationWalletId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("SourceUserId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid>("SourceUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("SourceUserName")
                         .HasColumnType("nvarchar(max)");
@@ -171,9 +144,6 @@ namespace Endava_Project.Server.Data.Migrations
 
                     b.Property<string>("Currency")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("DefaultStatus")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
